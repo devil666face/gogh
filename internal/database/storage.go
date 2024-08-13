@@ -45,7 +45,9 @@ func (s *Storage) Load() (*models.Data, error) {
 	}
 	s.buff = *bytes.NewBuffer(buff)
 	dec := gob.NewDecoder(&s.buff)
-	data := models.Data{}
+	data := models.Data{
+		Filestore: *models.NewFilestore(),
+	}
 	if err := dec.Decode(&data); err != nil {
 		return nil, fmt.Errorf("decode data: %w", err)
 	}

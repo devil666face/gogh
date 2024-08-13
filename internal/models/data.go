@@ -1,5 +1,6 @@
 package models
 
 type Data struct {
-	Settings Settings
+	Settings  Settings
+	Filestore Filestore
 }
