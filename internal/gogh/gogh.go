@@ -5,6 +5,8 @@ import (
 	"gogh/internal/database"
 	"gogh/internal/models"
 	"gogh/internal/service/file"
+	"log"
+	"sync"
 
 	gh "github.com/j178/github-s3"
 )
@@ -55,16 +57,46 @@ func (g *Gogh) Upload(path string) error {
 		return fmt.Errorf("init file: %w", err)
 	}
 	defer _file.Clear()
-	for _, p := range _file.Pieces {
-		res, err := g.github.UploadFromPath(p)
-		if err != nil {
-			return fmt.Errorf("failed to upload on github %s: %w", path, err)
-		}
-		fmt.Println(res.GithubLink)
-	}
-	// g.Data.Filestore.AddFile(path)
-	// if err := g.SaveData(); err != nil {
-	// 	return fmt.Errorf("failed to save data: %w", err)
+
+	// for _, f := range _file.Pieces {
+	// 	res, err := g.github.UploadFromPath(f)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	fmt.Println(res.GithubLink)
 	// }
+
+	type Result struct {
+		res string
+		err error
+	}
+
+	var wg sync.WaitGroup
+	reschan := make(chan Result, len(_file.Pieces)) // Buffered channel to capture results and errors
+
+	for _, f := range _file.Pieces {
+		wg.Add(1)
+		go func(f string) {
+			defer wg.Done()
+			log.Println(f)
+			res, err := g.github.UploadFromPath(f)
+			reschan <- Result{
+				res: res.GithubLink,
+				err: err,
+			}
+		}(f)
+	}
+	wg.Wait()
+	close(reschan)
+
+	var results []string
+	for r := range reschan {
+		if r.err != nil {
+			return r.err
+		}
+		results = append(results, r.res)
+	}
+
+	log.Println(results)
 	return nil
 }

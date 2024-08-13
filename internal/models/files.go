@@ -1,7 +1,5 @@
 package models
 
-import "github.com/google/uuid"
-
 type Filestore struct {
 	Files map[string]File
 }
@@ -22,8 +20,5 @@ func NewFilestore() *Filestore {
 	}
 }
 
-func (f *Filestore) AddFile(path string) {
-	f.Files[uuid.NewString()] = File{
-		Filename: path,
-	}
+func (f *Filestore) Add() {
 }
