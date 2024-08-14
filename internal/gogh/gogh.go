@@ -51,20 +51,12 @@ func (g *Gogh) LoadData() error {
 	return nil
 }
 
-func (g *Gogh) Upload(path string) error {
+func (g *Gogh) UploadParalel(path string) error {
 	_file, err := file.New(path)
 	if err != nil {
 		return fmt.Errorf("init file: %w", err)
 	}
 	defer _file.Clear()
-
-	// for _, f := range _file.Pieces {
-	// 	res, err := g.github.UploadFromPath(f)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	fmt.Println(res.GithubLink)
-	// }
 
 	type Result struct {
 		res string
@@ -72,7 +64,7 @@ func (g *Gogh) Upload(path string) error {
 	}
 
 	var wg sync.WaitGroup
-	reschan := make(chan Result, len(_file.Pieces)) // Buffered channel to capture results and errors
+	reschan := make(chan Result, len(_file.Pieces))
 
 	for _, f := range _file.Pieces {
 		wg.Add(1)
@@ -80,6 +72,7 @@ func (g *Gogh) Upload(path string) error {
 			defer wg.Done()
 			log.Println(f)
 			res, err := g.github.UploadFromPath(f)
+			log.Println(res.GithubLink)
 			reschan <- Result{
 				res: res.GithubLink,
 				err: err,
@@ -98,5 +91,24 @@ func (g *Gogh) Upload(path string) error {
 	}
 
 	log.Println(results)
+	return nil
+}
+
+func (g *Gogh) Upload(path string) error {
+	_file, err := file.New(path)
+	if err != nil {
+		return fmt.Errorf("init file: %w", err)
+	}
+	defer _file.Clear()
+
+	for _, f := range _file.Pieces {
+		log.Println(f)
+		res, err := g.github.UploadFromPath(f)
+		if err != nil {
+			return err
+		}
+		log.Println(res.GithubLink)
+	}
+
 	return nil
 }

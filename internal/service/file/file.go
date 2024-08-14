@@ -11,6 +11,7 @@ import (
 
 const (
 	_chunk = 25 * 1024 * 1024 // 25MB
+	// _chunk = 5 * 1024 * 1024 // 25MB
 )
 
 type File struct {
