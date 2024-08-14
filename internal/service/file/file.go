@@ -17,6 +17,7 @@ const (
 type File struct {
 	Id      string
 	Pieces  []string
+	Filname string
 	path    string
 	tempDir string
 	chunk   int
@@ -24,9 +25,10 @@ type File struct {
 
 func New(_path string) (*File, error) {
 	f := File{
-		Id:    uuid.NewString(),
-		path:  _path,
-		chunk: _chunk,
+		Id:      uuid.NewString(),
+		Filname: filepath.Base(_path),
+		path:    _path,
+		chunk:   _chunk,
 	}
 	f.tempDir = filepath.Join(os.TempDir(), f.Id)
 	if err := os.MkdirAll(f.tempDir, 0755); err != nil {

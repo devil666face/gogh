@@ -20,5 +20,19 @@ func NewFilestore() *Filestore {
 	}
 }
 
-func (f *Filestore) Add() {
+func (f *Filestore) Add(
+	id, filename, url string,
+) {
+	file, ok := f.Files[id]
+	if !ok {
+		f.Files[id] = File{
+			Filename: filename,
+			Pieces: []Piece{
+				{URL: url},
+			},
+		}
+		return
+	}
+	file.Pieces = append(file.Pieces, Piece{URL: url})
+	f.Files[id] = file
 }

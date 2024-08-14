@@ -102,12 +102,21 @@ func (g *Gogh) Upload(path string) error {
 	defer _file.Clear()
 
 	for _, f := range _file.Pieces {
-		log.Println(f)
+		// log.Println(f)
 		res, err := g.github.UploadFromPath(f)
 		if err != nil {
 			return err
 		}
-		log.Println(res.GithubLink)
+		g.Data.Filestore.Add(
+			_file.Id,
+			_file.Filname,
+			res.GithubLink,
+		)
+		// log.Println(res.GithubLink)
+	}
+
+	if err := g.SaveData(); err != nil {
+		return err
 	}
 
 	return nil
