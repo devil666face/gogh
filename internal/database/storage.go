@@ -9,13 +9,12 @@ import (
 )
 
 type Storage struct {
-	buff     bytes.Buffer
 	filename string
 }
 
 func New() (*Storage, error) {
 	_storage := &Storage{
-		buff:     *bytes.NewBuffer([]byte{}),
+		// buff:     *bytes.NewBuffer([]byte{}),
 		filename: "data.enc",
 	}
 	if _, err := os.Stat(_storage.filename); os.IsNotExist(err) {
@@ -28,23 +27,24 @@ func New() (*Storage, error) {
 }
 
 func (s *Storage) Save(data *models.Data) error {
-	enc := gob.NewEncoder(&s.buff)
+	buff := *bytes.NewBuffer([]byte{})
+	enc := gob.NewEncoder(&buff)
 	if err := enc.Encode(data); err != nil {
 		return fmt.Errorf("encode %s: %w", data, err)
 	}
-	if err := os.WriteFile(s.filename, s.buff.Bytes(), 0644); err != nil {
+	if err := os.WriteFile(s.filename, buff.Bytes(), 0644); err != nil {
 		return fmt.Errorf("save to file %s: %w", s.filename, err)
 	}
 	return nil
 }
 
 func (s *Storage) Load() (*models.Data, error) {
-	buff, err := os.ReadFile(s.filename)
+	readbuff, err := os.ReadFile(s.filename)
 	if err != nil {
 		return nil, fmt.Errorf("read data from file %s: %w", s.filename, err)
 	}
-	s.buff = *bytes.NewBuffer(buff)
-	dec := gob.NewDecoder(&s.buff)
+	buff := *bytes.NewBuffer(readbuff)
+	dec := gob.NewDecoder(&buff)
 	data := models.Data{
 		Filestore: *models.NewFilestore(),
 	}

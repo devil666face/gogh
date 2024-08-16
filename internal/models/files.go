@@ -1,13 +1,16 @@
 package models
 
+import "time"
+
 type Filestore struct {
 	Files map[string]File
 }
 
 type File struct {
-	Filename string
-	Password string
-	Pieces   []Piece
+	Filename    string
+	Password    string
+	Pieces      []Piece
+	CreatedDate time.Time
 }
 
 type Piece struct {
@@ -26,7 +29,8 @@ func (f *Filestore) Add(
 	file, ok := f.Files[id]
 	if !ok {
 		f.Files[id] = File{
-			Filename: filename,
+			Filename:    filename,
+			CreatedDate: time.Now(),
 			Pieces: []Piece{
 				{URL: url},
 			},

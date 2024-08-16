@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"gogh/internal/gogh"
 	"gogh/internal/view"
 	"log"
@@ -11,7 +12,17 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-
+	if _gogh.Data.Settings.SessionToken == "" {
+		var token string
+		fmt.Println("enter user_session cookie:")
+		if _, err := fmt.Scanln(&token); err != nil {
+			log.Fatalln(err)
+		}
+		_gogh.SetToken(token)
+		if err := _gogh.SaveData(); err != nil {
+			log.Fatalln(err)
+		}
+	}
 	_view := view.New(
 		_gogh,
 	)
@@ -20,18 +31,6 @@ func main() {
 	// flag.Parse()
 	// if len(flag.Args()) == 0 {
 	// 	log.Fatalln("Usage: gogh [path]")
-	// }
-
-	// if gogh.Data.Settings.SessionToken == "" {
-	// 	var token string
-	// 	fmt.Println("enter user_session cookie:")
-	// 	if _, err := fmt.Scanln(&token); err != nil {
-	// 		log.Fatalln(err)
-	// 	}
-	// 	gogh.SetToken(token)
-	// 	if err := gogh.SaveData(); err != nil {
-	// 		log.Fatalln(err)
-	// 	}
 	// }
 
 	// for _, path := range flag.Args() {
