@@ -26,11 +26,11 @@ func (v *View) uploadAction() {
 	for _, f := range files {
 		opts = append(opts, huh.NewOption[string](f, f))
 	}
-
-	if err := huh.NewSelect[string]().
-		Title("🗃 select a file").
+	s := huh.NewSelect[string]().
+		Title("select file").
 		Options(opts...).
-		Value(&file).Run(); err != nil {
+		Value(&file)
+	if err := huh.NewForm(huh.NewGroup(s)).Run(); err != nil {
 		ErrorFunc(err)
 		return
 	}
