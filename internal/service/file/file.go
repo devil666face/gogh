@@ -18,15 +18,21 @@ type File struct {
 	Id      string
 	Pieces  []string
 	Filname string
+	Size    int64
 	path    string
 	tempDir string
 	chunk   int
 }
 
 func New(_path string) (*File, error) {
+	stat, err := os.Stat(_path)
+	if err != nil {
+		return nil, fmt.Errorf("failed get info about file %s: %w", _path, err)
+	}
 	f := File{
 		Id:      uuid.NewString(),
 		Filname: filepath.Base(_path),
+		Size:    stat.Size(),
 		path:    _path,
 		chunk:   _chunk,
 	}

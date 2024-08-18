@@ -31,6 +31,7 @@ const (
 	Store    = "store"
 	Settings = "settings"
 	Show     = "show"
+	Delete   = "delete"
 	Upload   = "upload"
 	Download = "download"
 	Exit     = "exit"
