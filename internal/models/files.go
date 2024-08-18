@@ -45,6 +45,14 @@ func (f *File) FormatSize() string {
 	}
 }
 
+func (f *File) SlicePieces() []string {
+	var urls []string
+	for _, p := range f.Pieces {
+		urls = append(urls, p.URL)
+	}
+	return urls
+}
+
 func (f *Filestore) ID() int {
 	return len(f.Files)
 }

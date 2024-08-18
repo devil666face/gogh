@@ -26,7 +26,7 @@ func RunSelect(
 	value *string,
 ) error {
 	s := huh.NewSelect[string]().
-		Title("select file").
+		Title(title).
 		Options(opts...).
 		Value(value).
 		WithTheme(base16)
@@ -46,7 +46,7 @@ func (v *View) uploadAction() {
 	for _, f := range files {
 		opts = append(opts, huh.NewOption[string](f, f))
 	}
-	if err := RunSelect("upload file", opts, &file); err != nil {
+	if err := RunSelect("upload", opts, &file); err != nil {
 		ErrorFunc(err)
 		return
 	}
@@ -65,6 +65,10 @@ func (v *View) showAction() {
 		sb strings.Builder
 		w  = tabwriter.NewWriter(&sb, 1, 1, 1, ' ', 0)
 	)
+	if len(v.gogh.Data.Filestore.Files) == 0 {
+		ErrorFunc(fmt.Errorf("no uploaded data"))
+		return
+	}
 	fmt.Fprintf(w, "#\t%s\t%s\t%s", "Name", "Created", "Size")
 	for i, v := range v.gogh.Data.Filestore.Files {
 		fmt.Fprintf(w, "\n%d\t%s\t%s\t%s", i+1, v.Filename, v.CreatedDate.Format(dateFormat), v.FormatSize())
@@ -72,15 +76,12 @@ func (v *View) showAction() {
 	w.Flush()
 	fmt.Println(
 		lipgloss.NewStyle().
-			// BorderStyle(lipgloss.RoundedBorder()).
-			// BorderForeground(lipgloss.Color("63")).
 			Padding(0, 1).
 			Render(sb.String()),
-		// Width(40).
 	)
 }
 
-func (v *View) deleteAction() {
+func (v *View) selectRemoteFile(title string) (int, error) {
 	var (
 		strid string
 		opts  []huh.Option[string]
@@ -88,13 +89,20 @@ func (v *View) deleteAction() {
 	for id, f := range v.gogh.Data.Filestore.Files {
 		opts = append(opts, huh.NewOption[string](f.Filename, fmt.Sprint(id)))
 	}
-	if err := RunSelect("delete file", opts, &strid); err != nil {
-		ErrorFunc(err)
-		return
+	if err := RunSelect(title, opts, &strid); err != nil {
+		return -1, err
 	}
 	id, err := strconv.Atoi(strid)
 	if err != nil {
-		ErrorFunc(fmt.Errorf("failed to get delete id"))
+		return -1, fmt.Errorf("failed to get delete id")
+	}
+	return id, nil
+}
+
+func (v *View) deleteAction() {
+	id, err := v.selectRemoteFile("delete")
+	if err != nil {
+		ErrorFunc(err)
 		return
 	}
 	file := v.gogh.Data.Filestore.Files[id]
@@ -103,6 +111,23 @@ func (v *View) deleteAction() {
 		return
 	}
 	fmt.Printf("✅ deleted %s\r\n", file.Filename)
+}
+
+func (v *View) downloadAction() {
+	id, err := v.selectRemoteFile("download")
+	if err != nil {
+		ErrorFunc(err)
+		return
+	}
+	file := v.gogh.Data.Filestore.Files[id]
+	var download func() = func() {
+		if err := v.gogh.Download(id); err != nil {
+			ErrorFunc(err)
+			return
+		}
+		fmt.Printf("✅ downloaded %s\r\n", file.Filename)
+	}
+	_ = spinner.New().Title(fmt.Sprintf("⏳ download %s", file.Filename)).Action(download).Run()
 }
 
 func (v *View) storeExecutor(in string) {
@@ -114,6 +139,8 @@ func (v *View) storeExecutor(in string) {
 	switch args[0] {
 	case Upload:
 		v.uploadAction()
+	case Download:
+		v.downloadAction()
 	case Show:
 		v.showAction()
 	case Delete:

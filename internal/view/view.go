@@ -16,7 +16,7 @@ const (
 )
 
 var ErrorFunc func(err error) = func(err error) {
-	fmt.Println("⚠️ " + err.Error())
+	fmt.Printf("⚠️ " + err.Error() + "\r\n")
 }
 
 var NotFoundFunc func() = func() {

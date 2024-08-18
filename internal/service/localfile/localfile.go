@@ -1,4 +1,4 @@
-package file
+package localfile
 
 import (
 	"fmt"
@@ -10,28 +10,28 @@ import (
 )
 
 const (
-	_chunk = 20 * 1024 * 1024 // 25MB
+	_chunk = 20 * 1024 * 1024 // 20MB
 	// _chunk = 5 * 1024 * 1024 // 25MB
 )
 
-type File struct {
+type LocalFile struct {
 	Id      int
-	Pieces  []string
 	Filname string
 	Size    int64
+	Pieces  []string
 	path    string
 	tempDir string
 	tempId  string
 	chunk   int
 }
 
-func New(_id int, _path string) (*File, error) {
+func New(id int, _path string) (*LocalFile, error) {
 	stat, err := os.Stat(_path)
 	if err != nil {
 		return nil, fmt.Errorf("failed get info about file %s: %w", _path, err)
 	}
-	f := File{
-		Id:      _id,
+	f := LocalFile{
+		Id:      id,
 		Filname: filepath.Base(_path),
 		Size:    stat.Size(),
 		path:    _path,
@@ -48,14 +48,14 @@ func New(_id int, _path string) (*File, error) {
 	return &f, nil
 }
 
-func (f *File) Clear() error {
+func (f *LocalFile) Clear() error {
 	if err := os.RemoveAll(f.tempDir); err != nil {
 		return fmt.Errorf("failed to remove temp %s: %w", f.tempDir, err)
 	}
 	return nil
 }
 
-func (f *File) split() error {
+func (f *LocalFile) split() error {
 	file, err := os.Open(f.path)
 	if err != nil {
 		return fmt.Errorf("could not open file: %v", err)

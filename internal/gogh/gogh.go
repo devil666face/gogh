@@ -2,11 +2,13 @@ package gogh
 
 import (
 	"fmt"
-	"gogh/internal/database"
-	"gogh/internal/models"
-	"gogh/internal/service/file"
 	"log"
 	"sync"
+
+	"gogh/internal/database"
+	"gogh/internal/models"
+	"gogh/internal/service/localfile"
+	"gogh/internal/service/remotefile"
 
 	gh "github.com/j178/github-s3"
 )
@@ -52,7 +54,7 @@ func (g *Gogh) LoadData() error {
 }
 
 func (g *Gogh) UploadParalel(path string) error {
-	_file, err := file.New(g.Data.Filestore.ID(), path)
+	_file, err := localfile.New(g.Data.Filestore.ID(), path)
 	if err != nil {
 		return fmt.Errorf("init file: %w", err)
 	}
@@ -95,25 +97,25 @@ func (g *Gogh) UploadParalel(path string) error {
 }
 
 func (g *Gogh) Upload(path string) error {
-	_file, err := file.New(
+	file, err := localfile.New(
 		g.Data.Filestore.ID(),
 		path,
 	)
 	if err != nil {
-		return fmt.Errorf("init file: %w", err)
+		return fmt.Errorf("init local file: %w", err)
 	}
-	defer _file.Clear()
+	defer file.Clear()
 
-	for _, f := range _file.Pieces {
+	for _, f := range file.Pieces {
 		res, err := g.github.UploadFromPath(f)
 		if err != nil {
 			return err
 		}
 		g.Data.Filestore.Add(
-			_file.Id,
-			_file.Filname,
+			file.Id,
+			file.Filname,
 			res.GithubLink,
-			_file.Size,
+			file.Size,
 		)
 	}
 
@@ -128,6 +130,22 @@ func (g *Gogh) Delete(id int) error {
 		return err
 	}
 	if err := g.SaveData(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (g *Gogh) Download(id int) error {
+	_file := g.Data.Filestore.Files[id]
+	file, err := remotefile.New(
+		id,
+		_file.Filename,
+		_file.SlicePieces())
+	if err != nil {
+		return fmt.Errorf("init remote file: %w", err)
+	}
+	defer file.Clear()
+	if err := file.Download(); err != nil {
 		return err
 	}
 	return nil
