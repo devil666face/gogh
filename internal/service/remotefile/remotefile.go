@@ -1,6 +1,7 @@
 package remotefile
 
 import (
+	"compress/gzip"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,7 +16,6 @@ type RemoteFile struct {
 	Id      int
 	Filname string
 	Pieces  []string
-	path    string
 	tempDir string
 	tempId  string
 }
@@ -101,7 +101,7 @@ func (f *RemoteFile) join() error {
 	)
 
 	for {
-		filename := fmt.Sprintf("%s.%d.zip", filepath.Join(f.tempDir, filepath.Base(f.tempId)), num)
+		filename := fmt.Sprintf("%s.%d.gz", filepath.Join(f.tempDir, filepath.Base(f.tempId)), num)
 		piece, err := os.Open(filename)
 		if err != nil {
 			if os.IsNotExist(err) {
@@ -110,14 +110,56 @@ func (f *RemoteFile) join() error {
 			return fmt.Errorf("could not open part file: %v", err)
 		}
 
-		_, err = io.Copy(file, piece)
+		gr, err := gzip.NewReader(piece)
 		if err != nil {
-			return fmt.Errorf("could not copy part file to output file: %v", err)
+			piece.Close()
+			return fmt.Errorf("could not create gzip reader: %v", err)
 		}
 
+		_, err = io.Copy(file, gr)
+		if err != nil {
+			gr.Close()
+			piece.Close()
+			return fmt.Errorf("could not copy decompressed data to output file: %v", err)
+		}
+
+		gr.Close()
 		piece.Close()
 		num++
 	}
 
 	return nil
 }
+
+// func (f *RemoteFile) join() error {
+// 	file, err := os.Create(f.Filname)
+// 	if err != nil {
+// 		return fmt.Errorf("could not create output file: %v", err)
+// 	}
+// 	defer file.Close()
+
+// 	var (
+// 		num = 1
+// 	)
+
+// 	for {
+// 		filename := fmt.Sprintf("%s.%d.zip", filepath.Join(f.tempDir, filepath.Base(f.tempId)), num)
+// 		piece, err := os.Open(filename)
+// 		if err != nil {
+// 			if os.IsNotExist(err) {
+// 				break
+// 			}
+// 			return fmt.Errorf("could not open part file: %v", err)
+// 		}
+
+// 		_, err = io.Copy(file, piece)
+// 		if err != nil {
+// 			return fmt.Errorf("could not copy part file to output file: %v", err)
+// 		}
+
+// 		piece.Close()
+// 		num++
+// 	}
+
+// 	return nil
+// }

@@ -33,7 +33,7 @@ func RunSelect(
 	return huh.NewForm(huh.NewGroup(s)).Run()
 }
 
-func (v *View) uploadAction() {
+func (v *View) uploadAction(compress bool) {
 	var (
 		file string
 		opts []huh.Option[string]
@@ -51,7 +51,7 @@ func (v *View) uploadAction() {
 		return
 	}
 	var upload func() = func() {
-		if err := v.gogh.Upload(file); err != nil {
+		if err := v.gogh.Upload(file, compress); err != nil {
 			ErrorFunc(err)
 			return
 		}
@@ -138,7 +138,7 @@ func (v *View) storeExecutor(in string) {
 
 	switch args[0] {
 	case Upload:
-		v.uploadAction()
+		v.uploadAction(true)
 	case Download:
 		v.downloadAction()
 	case Show:

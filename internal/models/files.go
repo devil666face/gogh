@@ -25,6 +25,7 @@ type File struct {
 	Password    string
 	Size        int64
 	Pieces      []Piece
+	Compress    bool
 	CreatedDate time.Time
 }
 
@@ -59,8 +60,10 @@ func (f *Filestore) ID() int {
 
 func (f *Filestore) Add(
 	id int,
-	filename, url string,
+	filename string,
 	size int64,
+	compess bool,
+	url string,
 ) {
 	if id >= len(f.Files) {
 		f.Files = append(f.Files,
@@ -68,6 +71,7 @@ func (f *Filestore) Add(
 				Filename:    filename,
 				CreatedDate: time.Now(),
 				Size:        size,
+				Compress:    compess,
 				Pieces: []Piece{
 					{URL: url},
 				},

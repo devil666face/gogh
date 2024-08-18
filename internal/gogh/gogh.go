@@ -54,7 +54,7 @@ func (g *Gogh) LoadData() error {
 }
 
 func (g *Gogh) UploadParalel(path string) error {
-	_file, err := localfile.New(g.Data.Filestore.ID(), path)
+	_file, err := localfile.New(g.Data.Filestore.ID(), path, true)
 	if err != nil {
 		return fmt.Errorf("init file: %w", err)
 	}
@@ -96,10 +96,11 @@ func (g *Gogh) UploadParalel(path string) error {
 	return nil
 }
 
-func (g *Gogh) Upload(path string) error {
+func (g *Gogh) Upload(path string, compress bool) error {
 	file, err := localfile.New(
 		g.Data.Filestore.ID(),
 		path,
+		compress,
 	)
 	if err != nil {
 		return fmt.Errorf("init local file: %w", err)
@@ -114,8 +115,9 @@ func (g *Gogh) Upload(path string) error {
 		g.Data.Filestore.Add(
 			file.Id,
 			file.Filname,
-			res.GithubLink,
 			file.Size,
+			file.Compress,
+			res.GithubLink,
 		)
 	}
 
