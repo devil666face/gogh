@@ -142,6 +142,7 @@ func (g *Gogh) Download(id int) error {
 	file, err := remotefile.New(
 		id,
 		_file.Filename,
+		_file.Compress,
 		_file.SlicePieces())
 	if err != nil {
 		return fmt.Errorf("init remote file: %w", err)

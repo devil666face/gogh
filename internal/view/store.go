@@ -62,16 +62,22 @@ func (v *View) uploadAction(compress bool) {
 
 func (v *View) showAction() {
 	var (
-		sb strings.Builder
-		w  = tabwriter.NewWriter(&sb, 1, 1, 1, ' ', 0)
+		sb       strings.Builder
+		w        = tabwriter.NewWriter(&sb, 1, 1, 1, ' ', 0)
+		compress = func(c bool) string {
+			if c {
+				return "+"
+			}
+			return " "
+		}
 	)
 	if len(v.gogh.Data.Filestore.Files) == 0 {
 		ErrorFunc(fmt.Errorf("no uploaded data"))
 		return
 	}
-	fmt.Fprintf(w, "#\t%s\t%s\t%s", "Name", "Created", "Size")
+	fmt.Fprintf(w, "#\t%s\t%s\t%s\t%s", "Name", "Created", "Size", "Compress")
 	for i, v := range v.gogh.Data.Filestore.Files {
-		fmt.Fprintf(w, "\n%d\t%s\t%s\t%s", i+1, v.Filename, v.CreatedDate.Format(dateFormat), v.FormatSize())
+		fmt.Fprintf(w, "\n%d\t%s\t%s\t%s\t%s", i+1, v.Filename, v.CreatedDate.Format(dateFormat), v.FormatSize(), compress(v.Compress))
 	}
 	w.Flush()
 	fmt.Println(
@@ -138,7 +144,15 @@ func (v *View) storeExecutor(in string) {
 
 	switch args[0] {
 	case Upload:
-		v.uploadAction(true)
+		if len(args) == 1 {
+			v.uploadAction(true)
+			return
+		}
+		switch args[1] {
+		case NoCompress:
+			v.uploadAction(false)
+		}
+
 	case Download:
 		v.downloadAction()
 	case Show:
@@ -166,5 +180,11 @@ func (v *View) storeCompleter(d prompt.Document) []prompt.Suggest {
 			complete = []prompt.Suggest{}
 		}
 	}
+	if HasPrefix(d, Upload) {
+		complete = []prompt.Suggest{
+			{Text: NoCompress, Description: "not compressed file before upload"},
+		}
+	}
+
 	return prompt.FilterContains(complete, d.GetWordBeforeCursor(), true)
 }
