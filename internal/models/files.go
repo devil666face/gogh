@@ -17,7 +17,7 @@ const (
 )
 
 type Filestore struct {
-	Files map[string]File
+	Files []File
 }
 
 type File struct {
@@ -30,12 +30,6 @@ type File struct {
 
 type Piece struct {
 	URL string
-}
-
-func NewFilestore() *Filestore {
-	return &Filestore{
-		Files: make(map[string]File),
-	}
 }
 
 func (f *File) FormatSize() string {
@@ -51,33 +45,40 @@ func (f *File) FormatSize() string {
 	}
 }
 
-func (f *Filestore) Add(
-	id, filename, url string,
-	size int64,
-) {
-	file, ok := f.Files[id]
-	if !ok {
-		f.Files[id] = File{
-			Filename:    filename,
-			CreatedDate: time.Now(),
-			Size:        size,
-			Pieces: []Piece{
-				{URL: url},
-			},
-		}
-		return
-	}
-	file.Pieces = append(file.Pieces, Piece{URL: url})
-	f.Files[id] = file
+func (f *Filestore) ID() int {
+	return len(f.Files)
 }
 
-func (f *Filestore) FilesSlice() []File {
-	var files = []File{}
-	for _, file := range f.Files {
-		files = append(files, file)
+func (f *Filestore) Add(
+	id int,
+	filename, url string,
+	size int64,
+) {
+	if id >= len(f.Files) {
+		f.Files = append(f.Files,
+			File{
+				Filename:    filename,
+				CreatedDate: time.Now(),
+				Size:        size,
+				Pieces: []Piece{
+					{URL: url},
+				},
+			},
+		)
+	} else {
+		file := f.Files[id]
+		file.Pieces = append(file.Pieces, Piece{URL: url})
+		f.Files[id] = file
 	}
-	sort.Slice(files, func(i, j int) bool {
-		return files[i].CreatedDate.Before(files[j].CreatedDate)
+	sort.Slice(f.Files, func(i, j int) bool {
+		return f.Files[i].CreatedDate.Before(f.Files[j].CreatedDate)
 	})
-	return files
+}
+
+func (f *Filestore) Delete(id int) error {
+	if id < 0 || id >= len(f.Files) {
+		return fmt.Errorf("index out of range %d", len(f.Files))
+	}
+	f.Files = append(f.Files[:id], f.Files[id+1:]...)
+	return nil
 }

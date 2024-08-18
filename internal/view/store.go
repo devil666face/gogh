@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gogh/pkg/fs"
 	"os"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 
@@ -65,7 +66,7 @@ func (v *View) showAction() {
 		w  = tabwriter.NewWriter(&sb, 1, 1, 1, ' ', 0)
 	)
 	fmt.Fprintf(w, "#\t%s\t%s\t%s", "Name", "Created", "Size")
-	for i, v := range v.gogh.Data.Filestore.FilesSlice() {
+	for i, v := range v.gogh.Data.Filestore.Files {
 		fmt.Fprintf(w, "\n%d\t%s\t%s\t%s", i+1, v.Filename, v.CreatedDate.Format(dateFormat), v.FormatSize())
 	}
 	w.Flush()
@@ -81,17 +82,27 @@ func (v *View) showAction() {
 
 func (v *View) deleteAction() {
 	var (
-		file string
-		opts []huh.Option[string]
+		strid string
+		opts  []huh.Option[string]
 	)
-	for k, f := range v.gogh.Data.Filestore.Files {
-		opts = append(opts, huh.NewOption[string](f.Filename, k))
+	for id, f := range v.gogh.Data.Filestore.Files {
+		opts = append(opts, huh.NewOption[string](f.Filename, fmt.Sprint(id)))
 	}
-	if err := RunSelect("delete file", opts, &file); err != nil {
+	if err := RunSelect("delete file", opts, &strid); err != nil {
 		ErrorFunc(err)
 		return
 	}
-	fmt.Println(file)
+	id, err := strconv.Atoi(strid)
+	if err != nil {
+		ErrorFunc(fmt.Errorf("failed to get delete id"))
+		return
+	}
+	file := v.gogh.Data.Filestore.Files[id]
+	if err := v.gogh.Delete(id); err != nil {
+		ErrorFunc(err)
+		return
+	}
+	fmt.Printf("✅ deleted %s\r\n", file.Filename)
 }
 
 func (v *View) storeExecutor(in string) {

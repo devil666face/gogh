@@ -27,18 +27,4 @@ func main() {
 		_gogh,
 	)
 	_view.Run()
-
-	// flag.Parse()
-	// if len(flag.Args()) == 0 {
-	// 	log.Fatalln("Usage: gogh [path]")
-	// }
-
-	// for _, path := range flag.Args() {
-	// 	if err := gogh.Upload(path); err != nil {
-	// 		log.Fatalln(err)
-	// 	}
-	// if err := gogh.UploadParalel(path); err != nil {
-	// 	log.Fatalln(err)
-	// }
-	// }
 }

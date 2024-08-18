@@ -52,7 +52,7 @@ func (g *Gogh) LoadData() error {
 }
 
 func (g *Gogh) UploadParalel(path string) error {
-	_file, err := file.New(path)
+	_file, err := file.New(g.Data.Filestore.ID(), path)
 	if err != nil {
 		return fmt.Errorf("init file: %w", err)
 	}
@@ -95,7 +95,10 @@ func (g *Gogh) UploadParalel(path string) error {
 }
 
 func (g *Gogh) Upload(path string) error {
-	_file, err := file.New(path)
+	_file, err := file.New(
+		g.Data.Filestore.ID(),
+		path,
+	)
 	if err != nil {
 		return fmt.Errorf("init file: %w", err)
 	}
@@ -117,6 +120,15 @@ func (g *Gogh) Upload(path string) error {
 	if err := g.SaveData(); err != nil {
 		return err
 	}
+	return nil
+}
 
+func (g *Gogh) Delete(id int) error {
+	if err := g.Data.Filestore.Delete(id); err != nil {
+		return err
+	}
+	if err := g.SaveData(); err != nil {
+		return err
+	}
 	return nil
 }

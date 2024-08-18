@@ -15,28 +15,30 @@ const (
 )
 
 type File struct {
-	Id      string
+	Id      int
 	Pieces  []string
 	Filname string
 	Size    int64
 	path    string
 	tempDir string
+	tempId  string
 	chunk   int
 }
 
-func New(_path string) (*File, error) {
+func New(_id int, _path string) (*File, error) {
 	stat, err := os.Stat(_path)
 	if err != nil {
 		return nil, fmt.Errorf("failed get info about file %s: %w", _path, err)
 	}
 	f := File{
-		Id:      uuid.NewString(),
+		Id:      _id,
 		Filname: filepath.Base(_path),
 		Size:    stat.Size(),
 		path:    _path,
 		chunk:   _chunk,
+		tempId:  uuid.NewString(),
 	}
-	f.tempDir = filepath.Join(os.TempDir(), f.Id)
+	f.tempDir = filepath.Join(os.TempDir(), f.tempId)
 	if err := os.MkdirAll(f.tempDir, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create temp dir %s: %w", f.tempDir, err)
 	}
@@ -74,7 +76,7 @@ func (f *File) split() error {
 			break
 		}
 
-		filename := fmt.Sprintf("%s.%d.zip", filepath.Join(f.tempDir, f.Id), num)
+		filename := fmt.Sprintf("%s.%d.zip", filepath.Join(f.tempDir, f.tempId), num)
 		piece, err := os.Create(filename)
 		if err != nil {
 			return fmt.Errorf("could not create part file: %w", err)
