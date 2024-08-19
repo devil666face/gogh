@@ -31,6 +31,7 @@ type File struct {
 
 type Piece struct {
 	URL string
+	Key string
 }
 
 func (f *File) FormatSize() string {
@@ -46,13 +47,13 @@ func (f *File) FormatSize() string {
 	}
 }
 
-func (f *File) SlicePieces() []string {
-	var urls []string
-	for _, p := range f.Pieces {
-		urls = append(urls, p.URL)
-	}
-	return urls
-}
+// func (f *File) SlicePieces() []string {
+// 	var urls []string
+// 	for _, p := range f.Pieces {
+// 		urls = append(urls, p.URL)
+// 	}
+// 	return urls
+// }
 
 func (f *Filestore) ID() int {
 	return len(f.Files)
@@ -63,6 +64,7 @@ func (f *Filestore) Add(
 	filename string,
 	size int64,
 	compess bool,
+	key string,
 	url string,
 ) {
 	if id >= len(f.Files) {
@@ -73,13 +75,19 @@ func (f *Filestore) Add(
 				Size:        size,
 				Compress:    compess,
 				Pieces: []Piece{
-					{URL: url},
+					{
+						URL: url,
+						Key: key,
+					},
 				},
 			},
 		)
 	} else {
 		file := f.Files[id]
-		file.Pieces = append(file.Pieces, Piece{URL: url})
+		file.Pieces = append(file.Pieces, Piece{
+			URL: url,
+			Key: key,
+		})
 		f.Files[id] = file
 	}
 	sort.Slice(f.Files, func(i, j int) bool {

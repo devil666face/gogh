@@ -3,6 +3,7 @@ package remotefile
 import (
 	"compress/gzip"
 	"fmt"
+	"gogh/internal/models"
 	"io"
 	"net/http"
 	"net/url"
@@ -16,7 +17,7 @@ type RemoteFile struct {
 	Id       int
 	Filname  string
 	Compress bool
-	Pieces   []string
+	Pieces   []models.Piece
 	tempDir  string
 	tempId   string
 }
@@ -25,9 +26,9 @@ func New(
 	id int,
 	filename string,
 	compress bool,
-	pieces []string,
+	pieces []models.Piece,
 ) (*RemoteFile, error) {
-	parsed, err := url.Parse(pieces[0])
+	parsed, err := url.Parse(pieces[0].URL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse url: %w", err)
 	}
@@ -36,7 +37,7 @@ func New(
 		return nil, fmt.Errorf("failed to get uuid from url")
 	}
 
-	f := RemoteFile{
+	rf := RemoteFile{
 		Id:       id,
 		Filname:  filename,
 		Compress: compress,
@@ -44,79 +45,32 @@ func New(
 		tempId:   s[0],
 	}
 
-	f.tempDir = filepath.Join(os.TempDir(), f.tempId)
-	if err := os.MkdirAll(f.tempDir, 0755); err != nil {
-		return nil, fmt.Errorf("failed to create temp dir %s: %w", f.tempDir, err)
+	rf.tempDir = filepath.Join(os.TempDir(), rf.tempId)
+	if err := os.MkdirAll(rf.tempDir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create temp dir %s: %w", rf.tempDir, err)
 	}
-	return &f, nil
+	return &rf, nil
 }
 
-func (f *RemoteFile) Clear() error {
-	if err := os.RemoveAll(f.tempDir); err != nil {
-		return fmt.Errorf("failed to remove temp %s: %w", f.tempDir, err)
+func (rf *RemoteFile) Clear() error {
+	if err := os.RemoveAll(rf.tempDir); err != nil {
+		return fmt.Errorf("failed to remove temp %s: %w", rf.tempDir, err)
 	}
 	return nil
 }
 
-func (f *RemoteFile) download(u string) error {
-	parsed, err := url.Parse(u)
-	if err != nil {
-		return fmt.Errorf("failed to parse url: %w", err)
-	}
-	resp, err := http.Get(u)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return fmt.Errorf("failed to send get request on %s: %w", u, err)
-	}
-	defer resp.Body.Close()
-
-	out, err := os.Create(filepath.Join(f.tempDir, path.Base(parsed.Path)))
-	if err != nil {
-		return fmt.Errorf("failed to create local file %w", err)
-	}
-	defer out.Close()
-
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return fmt.Errorf("failed to write response to file: %w", err)
-	}
-	return nil
-}
-
-func (f *RemoteFile) Download() error {
-	for _, u := range f.Pieces {
-		if err := f.download(u); err != nil {
+func (rf *RemoteFile) Download() error {
+	for _, u := range rf.Pieces {
+		if err := rf.downloadPiece(u.URL); err != nil {
 			return err
 		}
 	}
-	return f.join()
+	return rf.join()
 }
 
-// func (f *RemoteFile) join() error {
-// 	file, err := os.Create(f.Filname)
-// 	if err != nil {
-// 		return fmt.Errorf("could not create output file: %w", err)
-// 	}
-// 	defer file.Close()
-
-// 	for num := 1; ; num++ {
-// 		filename := fmt.Sprintf("%s.%d.gz", filepath.Join(f.tempDir, filepath.Base(f.tempId)), num)
-// 		if err := f.processPiece(file, filename); err != nil {
-// 			if os.IsNotExist(err) {
-// 				break
-// 			}
-// 			return err
-// 		}
-// 	}
-
-// 	return nil
-// }
-
-func (f *RemoteFile) processPiece(output *os.File, piece *os.File, filename string) error {
-	defer piece.Close()
-
+func (rf *RemoteFile) processPiece(output *os.File, piece *os.File, filename string) error {
 	switch {
-	case f.Compress:
+	case rf.Compress:
 		gr, err := gzip.NewReader(piece)
 		if err != nil {
 			return fmt.Errorf("could not create gzip reader: %w", err)
@@ -131,93 +85,77 @@ func (f *RemoteFile) processPiece(output *os.File, piece *os.File, filename stri
 			return fmt.Errorf("could not copy part file to output file: %w", err)
 		}
 	}
-
 	return nil
 }
 
-func (f *RemoteFile) join() error {
-	file, err := os.Create(f.Filname)
+func (rf *RemoteFile) join() error {
+	file, err := os.Create(rf.Filname)
 	if err != nil {
 		return fmt.Errorf("could not create output file: %v", err)
 	}
 	defer file.Close()
 
-	// var (
-	// 	num = 1
-	// )
-
 	for num := 1; ; num++ {
-		filename := fmt.Sprintf("%s.%d.gz", filepath.Join(f.tempDir, filepath.Base(f.tempId)), num)
+		filename := fmt.Sprintf("%s.%d.gz", filepath.Join(rf.tempDir, filepath.Base(rf.tempId)), num)
 		piece, err := os.Open(filename)
+
 		if err != nil {
 			if os.IsNotExist(err) {
 				break
 			}
 			return fmt.Errorf("could not open part file: %v", err)
 		}
+		defer piece.Close()
 
-		// switch {
-		// case f.Compress:
-		// 	gr, err := gzip.NewReader(piece)
-		// 	if err != nil {
-		// 		piece.Close()
-		// 		return fmt.Errorf("could not create gzip reader: %v", err)
-		// 	}
-
-		// 	_, err = io.Copy(file, gr)
-		// 	if err != nil {
-		// 		gr.Close()
-		// 		piece.Close()
-		// 		return fmt.Errorf("could not copy decompressed data to output file: %v", err)
-		// 	}
-		// 	gr.Close()
-		// 	piece.Close()
-
-		// default:
-		// 	_, err = io.Copy(file, piece)
-		// 	if err != nil {
-		// 		return fmt.Errorf("could not copy part file to output file: %v", err)
-		// 	}
-		// 	piece.Close()
+		// cryptor, err := crypt.New(rf.Pieces[num-1].Key)
+		// if err != nil {
+		// 	return err
 		// }
-		if err := f.processPiece(file, piece, filename); err != nil {
+		// if err := rf.decryptPiece(piece, cryptor); err != nil {
+		// 	return err
+		// }
+		if err := rf.processPiece(file, piece, filename); err != nil {
 			return err
 		}
-		// num++
 	}
-
 	return nil
 }
 
-// func (f *RemoteFile) join() error {
-// 	file, err := os.Create(f.Filname)
+func (rf *RemoteFile) downloadPiece(u string) error {
+	parsed, err := url.Parse(u)
+	if err != nil {
+		return fmt.Errorf("failed to parse url: %w", err)
+	}
+	resp, err := http.Get(u)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return fmt.Errorf("failed to send get request on %s: %w", u, err)
+	}
+	defer resp.Body.Close()
+
+	out, err := os.Create(filepath.Join(rf.tempDir, path.Base(parsed.Path)))
+	if err != nil {
+		return fmt.Errorf("failed to create local file %w", err)
+	}
+	defer out.Close()
+
+	if _, err = io.Copy(out, resp.Body); err != nil {
+		return fmt.Errorf("failed to write response to file: %w", err)
+	}
+	return nil
+}
+
+// func (rf *RemoteFile) decryptPiece(piece *os.File, cryptor *crypt.Sync) error {
+// 	body, err := io.ReadAll(piece)
 // 	if err != nil {
-// 		return fmt.Errorf("could not create output file: %v", err)
+// 		return fmt.Errorf("failed read body from piece: %w", err)
 // 	}
-// 	defer file.Close()
-
-// 	var (
-// 		num = 1
-// 	)
-
-// 	for {
-// 		filename := fmt.Sprintf("%s.%d.zip", filepath.Join(f.tempDir, filepath.Base(f.tempId)), num)
-// 		piece, err := os.Open(filename)
-// 		if err != nil {
-// 			if os.IsNotExist(err) {
-// 				break
-// 			}
-// 			return fmt.Errorf("could not open part file: %v", err)
-// 		}
-
-// 		_, err = io.Copy(file, piece)
-// 		if err != nil {
-// 			return fmt.Errorf("could not copy part file to output file: %v", err)
-// 		}
-
-// 		piece.Close()
-// 		num++
+// 	decrypt, err := cryptor.Decrypt(body)
+// 	if err != nil {
+// 		return fmt.Errorf("decrypt error: %w", err)
 // 	}
-
+// 	if _, err := piece.Write(decrypt); err != nil {
+// 		return fmt.Errorf("could not write part of decrypt file: %w", err)
+// 	}
 // 	return nil
 // }

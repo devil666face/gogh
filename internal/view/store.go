@@ -77,7 +77,15 @@ func (v *View) showAction() {
 	}
 	fmt.Fprintf(w, "#\t%s\t%s\t%s\t%s", "Name", "Created", "Size", "Compress")
 	for i, v := range v.gogh.Data.Filestore.Files {
-		fmt.Fprintf(w, "\n%d\t%s\t%s\t%s\t%s", i+1, v.Filename, v.CreatedDate.Format(dateFormat), v.FormatSize(), compress(v.Compress))
+		fmt.Fprintf(
+			w,
+			"\n%d\t%s\t%s\t%s\t%s",
+			i+1,
+			v.Filename,
+			v.CreatedDate.Format(dateFormat),
+			v.FormatSize(),
+			compress(v.Compress),
+		)
 	}
 	w.Flush()
 	fmt.Println(
