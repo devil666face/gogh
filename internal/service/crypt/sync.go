@@ -102,6 +102,5 @@ func (s *Sync) Decrypt(data []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(err)
 	return plain, nil
 }

@@ -1,9 +1,9 @@
 package remotefile
 
 import (
+	"bytes"
 	"compress/gzip"
 	"fmt"
-	"gogh/internal/models"
 	"io"
 	"net/http"
 	"net/url"
@@ -11,6 +11,9 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"gogh/internal/models"
+	"gogh/internal/service/crypt"
 )
 
 type RemoteFile struct {
@@ -68,24 +71,17 @@ func (rf *RemoteFile) Download() error {
 	return rf.join()
 }
 
-func (rf *RemoteFile) processPiece(output *os.File, piece *os.File, filename string) error {
-	switch {
-	case rf.Compress:
-		gr, err := gzip.NewReader(piece)
-		if err != nil {
-			return fmt.Errorf("could not create gzip reader: %w", err)
-		}
-		defer gr.Close()
+func ungzipData(data []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	buf.Write(data)
 
-		if _, err = io.Copy(output, gr); err != nil {
-			return fmt.Errorf("could not copy decompressed data to output file: %w", err)
-		}
-	default:
-		if _, err := io.Copy(output, piece); err != nil {
-			return fmt.Errorf("could not copy part file to output file: %w", err)
-		}
+	gr, err := gzip.NewReader(&buf)
+	if err != nil {
+		return nil, fmt.Errorf("could not create gzip reader: %w", err)
 	}
-	return nil
+	defer gr.Close()
+
+	return io.ReadAll(gr)
 }
 
 func (rf *RemoteFile) join() error {
@@ -107,16 +103,28 @@ func (rf *RemoteFile) join() error {
 		}
 		defer piece.Close()
 
-		// cryptor, err := crypt.New(rf.Pieces[num-1].Key)
-		// if err != nil {
-		// 	return err
-		// }
-		// if err := rf.decryptPiece(piece, cryptor); err != nil {
-		// 	return err
-		// }
-		if err := rf.processPiece(file, piece, filename); err != nil {
-			return err
+		data, err := io.ReadAll(piece)
+		if err != nil {
+			return fmt.Errorf("failed read piece: %w", err)
 		}
+
+		cryptor, err := crypt.New(rf.Pieces[num-1].Key)
+		if err != nil {
+			return fmt.Errorf("init decryptor error: %w", err)
+		}
+		if data, err = cryptor.Decrypt(data); err != nil {
+			return fmt.Errorf("decrypt error: %w", err)
+		}
+
+		if rf.Compress {
+			if data, err = ungzipData(data); err != nil {
+				return fmt.Errorf("failed decompress piece: %w", err)
+			}
+		}
+		if _, err := file.Write(data); err != nil {
+			return fmt.Errorf("could not copy part file to output file: %w", err)
+		}
+
 	}
 	return nil
 }
@@ -144,18 +152,3 @@ func (rf *RemoteFile) downloadPiece(u string) error {
 	}
 	return nil
 }
-
-// func (rf *RemoteFile) decryptPiece(piece *os.File, cryptor *crypt.Sync) error {
-// 	body, err := io.ReadAll(piece)
-// 	if err != nil {
-// 		return fmt.Errorf("failed read body from piece: %w", err)
-// 	}
-// 	decrypt, err := cryptor.Decrypt(body)
-// 	if err != nil {
-// 		return fmt.Errorf("decrypt error: %w", err)
-// 	}
-// 	if _, err := piece.Write(decrypt); err != nil {
-// 		return fmt.Errorf("could not write part of decrypt file: %w", err)
-// 	}
-// 	return nil
-// }

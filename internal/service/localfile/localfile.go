@@ -1,12 +1,14 @@
 package localfile
 
 import (
+	"bytes"
 	"compress/gzip"
 	"fmt"
-	"gogh/internal/service/crypt"
 	"io"
 	"os"
 	"path/filepath"
+
+	"gogh/internal/service/crypt"
 
 	"github.com/google/uuid"
 )
@@ -94,14 +96,21 @@ func (lf *LocalFile) split(path string) error {
 		}
 		defer piece.Close()
 
-		if err := lf.writePiece(piece, buff[:n]); err != nil {
-			return fmt.Errorf("gzip error: %w", err)
+		data := buff[:n]
+		if lf.Compress {
+			if data, err = gzipData(data); err != nil {
+				return fmt.Errorf("gzip error: %w", err)
+			}
 		}
 
 		cryptor, _ := crypt.New()
-		// if err := lf.cryptPiece(piece, cryptor); err != nil {
-		// 	return fmt.Errorf("crypt error: %w", err)
-		// }
+		if data, err = cryptor.Encrypt(data); err != nil {
+			return fmt.Errorf("encrypt error: %w", err)
+		}
+
+		if _, err := piece.Write(data); err != nil {
+			return fmt.Errorf("could not write to part file: %w", err)
+		}
 
 		lf.Pieces = append(lf.Pieces, LocalPiece{
 			Filename: filename,
@@ -112,37 +121,15 @@ func (lf *LocalFile) split(path string) error {
 	return nil
 }
 
-func (lf *LocalFile) writePiece(piece *os.File, data []byte) error {
-	switch {
-	case lf.Compress:
-		gw := gzip.NewWriter(piece)
-		defer gw.Close()
-
-		if _, err := gw.Write(data); err != nil {
-			return fmt.Errorf("could not write to gzip part file: %w", err)
-		}
-		if err := gw.Close(); err != nil {
-			return fmt.Errorf("could not close gzip writer: %w", err)
-		}
-	default:
-		if _, err := piece.Write(data); err != nil {
-			return fmt.Errorf("could not write to part file: %w", err)
-		}
+func gzipData(data []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	gw := gzip.NewWriter(&buf)
+	defer gw.Close()
+	if _, err := gw.Write(data); err != nil {
+		return nil, fmt.Errorf("could not write to gzip part file: %w", err)
 	}
-	return nil
+	if err := gw.Close(); err != nil {
+		return nil, fmt.Errorf("could not close gzip writer: %w", err)
+	}
+	return buf.Bytes(), nil
 }
-
-// func (lf *LocalFile) cryptPiece(piece *os.File, cryptor *crypt.Sync) error {
-// 	body, err := io.ReadAll(piece)
-// 	if err != nil {
-// 		return fmt.Errorf("failed read body from piece: %w", err)
-// 	}
-// 	encrypt, err := cryptor.Encrypt(body)
-// 	if err != nil {
-// 		return fmt.Errorf("encrypt error: %w", err)
-// 	}
-// 	if _, err := piece.Write(encrypt); err != nil {
-// 		return fmt.Errorf("could not write part of encrypt file: %w", err)
-// 	}
-// 	return nil
-// }
