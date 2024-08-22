@@ -12,10 +12,9 @@ type Storage struct {
 	filename string
 }
 
-func New() (*Storage, error) {
+func New(_filename string) (*Storage, error) {
 	_storage := &Storage{
-		// buff:     *bytes.NewBuffer([]byte{}),
-		filename: "data.enc",
+		filename: _filename,
 	}
 	if _, err := os.Stat(_storage.filename); os.IsNotExist(err) {
 		if err := _storage.Save(&models.Data{}); err != nil {

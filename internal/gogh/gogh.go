@@ -3,6 +3,7 @@ package gogh
 import (
 	"fmt"
 
+	"gogh/internal/config"
 	"gogh/internal/database"
 	"gogh/internal/models"
 	"gogh/internal/service/localfile"
@@ -13,21 +14,27 @@ import (
 
 type Gogh struct {
 	Data    *models.Data
+	config  *config.Config
 	storage *database.Storage
 	github  *gh.GitHub
 }
 
 func New() (*Gogh, error) {
-	_storage, err := database.New()
+	_config, err := config.New()
+	if err != nil {
+		return nil, fmt.Errorf("init config: %w", err)
+	}
+	_storage, err := database.New(_config.Database)
 	if err != nil {
 		return nil, fmt.Errorf("init gogh database: %w", err)
 	}
 	_data, err := _storage.Load()
 	if err != nil {
-		return nil, fmt.Errorf("init gogh: %w", err)
+		return nil, fmt.Errorf("init gogh storage: %w", err)
 	}
 	return &Gogh{
 		Data:    _data,
+		config:  _config,
 		storage: _storage,
 		github:  gh.New(_data.Settings.SessionToken, ""),
 	}, nil

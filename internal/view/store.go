@@ -2,11 +2,12 @@ package view
 
 import (
 	"fmt"
-	"gogh/pkg/fs"
 	"os"
 	"strconv"
 	"strings"
 	"text/tabwriter"
+
+	"gogh/pkg/fs"
 
 	"github.com/c-bata/go-prompt"
 	"github.com/charmbracelet/huh"
