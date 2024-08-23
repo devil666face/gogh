@@ -13,11 +13,16 @@ type Storage struct {
 }
 
 func New(_filename string) (*Storage, error) {
+	var data = models.Data{
+		Settings: models.Settings{
+			Compress: true,
+		},
+	}
 	_storage := &Storage{
 		filename: _filename,
 	}
 	if _, err := os.Stat(_storage.filename); os.IsNotExist(err) {
-		if err := _storage.Save(&models.Data{}); err != nil {
+		if err := _storage.Save(&data); err != nil {
 			return nil, fmt.Errorf("create database: %w", err)
 		}
 

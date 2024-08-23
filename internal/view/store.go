@@ -39,6 +39,10 @@ func (v *View) uploadAction(compress bool) {
 		file string
 		opts []huh.Option[string]
 	)
+	if v.gogh.Data.Settings.SessionToken == "" {
+		ErrorFunc(fmt.Errorf("you must set cookie token"))
+		return
+	}
 	files, err := fs.FilesInCurrentDir()
 	if err != nil {
 		ErrorFunc(err)
@@ -61,16 +65,10 @@ func (v *View) uploadAction(compress bool) {
 	_ = spinner.New().Title(fmt.Sprintf("⏳ upload %s", file)).Action(upload).Run()
 }
 
-func (v *View) showAction() {
+func (v *View) showStoreAction() {
 	var (
-		sb       strings.Builder
-		w        = tabwriter.NewWriter(&sb, 1, 1, 1, ' ', 0)
-		compress = func(c bool) string {
-			if c {
-				return "+"
-			}
-			return " "
-		}
+		sb strings.Builder
+		w  = tabwriter.NewWriter(&sb, 1, 1, 1, ' ', 0)
 	)
 	if len(v.gogh.Data.Filestore.Files) == 0 {
 		ErrorFunc(fmt.Errorf("no uploaded data"))
@@ -85,7 +83,7 @@ func (v *View) showAction() {
 			v.Filename,
 			v.CreatedDate.Format(dateFormat),
 			v.FormatSize(),
-			compress(v.Compress),
+			boolFormat(v.Compress),
 		)
 	}
 	w.Flush()
@@ -165,7 +163,7 @@ func (v *View) storeExecutor(in string) {
 	case Download:
 		v.downloadAction()
 	case Show:
-		v.showAction()
+		v.showStoreAction()
 	case Delete:
 		v.deleteAction()
 	case Exit:

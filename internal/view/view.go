@@ -19,6 +19,13 @@ var ErrorFunc func(err error) = func(err error) {
 	fmt.Printf("⚠️ " + err.Error() + "\r\n")
 }
 
+var boolFormat = func(c bool) string {
+	if c {
+		return "+"
+	}
+	return " "
+}
+
 var NotFoundFunc func() = func() {
 	fmt.Println(NotFound)
 }
@@ -34,7 +41,10 @@ const (
 	Delete     = "delete"
 	Upload     = "upload"
 	NoCompress = "nocompress"
+	Compress   = "compress"
 	Download   = "download"
+	Token      = "token"
+	Set        = "set"
 	Exit       = "exit"
 )
 
@@ -57,7 +67,11 @@ func (v *View) executor(in string) {
 			fmt.Sprintf("%s%s >> ", Title, "🗄️ "+Store),
 		).Run()
 	case Settings:
-
+		NewPrompt(
+			v.settingsExecutor,
+			v.settingsCompleter,
+			fmt.Sprintf("%s%s >> ", Title, "⚙️ "+Settings),
+		).Run()
 	case Exit:
 		os.Exit(0)
 	default:
