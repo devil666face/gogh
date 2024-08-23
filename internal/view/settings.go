@@ -15,7 +15,7 @@ func (v *View) showSettingsAction() {
 		sb strings.Builder
 		w  = tabwriter.NewWriter(&sb, 1, 1, 1, ' ', 0)
 	)
-	fmt.Fprintf(w, "%s\t%s", "Field", "Value")
+	fmt.Fprintf(w, "%s\t%s", "Key", "Value")
 	fmt.Fprintf(w, "\n%s\t%s", "compress", boolFormat(v.gogh.Data.Settings.Compress))
 	fmt.Fprintf(w, "\n%s\t%s", "token", v.gogh.Data.Settings.SessionToken)
 	w.Flush()
