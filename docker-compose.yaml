@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  gogh:
+    build:
+      context: .
+      dockerfile: Dockerfile.go
+    image: gogh:go
+    volumes:
+      - ./bin:/build/bin
+    container_name: gogh
+
