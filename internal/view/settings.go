@@ -2,8 +2,6 @@ package view
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"strings"
 	"text/tabwriter"
 
@@ -63,16 +61,26 @@ func (v *View) settingsExecutor(in string) {
 				ErrorFunc(err)
 				return
 			}
-			v.gogh.SetToken(token)
-			if err := v.gogh.SaveData(); err != nil {
-				log.Fatalln(err)
+			if err := v.gogh.SetToken(token); err != nil {
+				ErrorFunc(err)
 			}
 		case Compress:
-			fmt.Println("set compress")
+			var confirm bool
+			if err := huh.NewConfirm().
+				Title("enable auto-compress").
+				Affirmative("yes").
+				Negative("no").
+				Value(&confirm).
+				Run(); err != nil {
+				ErrorFunc(err)
+				return
+			}
+			v.gogh.Data.Settings.Compress = confirm
+			if err := v.gogh.SaveData(); err != nil {
+				ErrorFunc(err)
+			}
 		}
 
-	case Exit:
-		os.Exit(0)
 	default:
 		NotFoundFunc()
 	}
@@ -82,7 +90,6 @@ func (v *View) settingsCompleter(d prompt.Document) []prompt.Suggest {
 	var complete = []prompt.Suggest{
 		{Text: Show, Description: "show all settings"},
 		{Text: Set, Description: "set settings"},
-		{Text: Exit, Description: ""},
 	}
 	// remove second postition complete
 	for _, c := range complete {

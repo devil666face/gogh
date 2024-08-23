@@ -2,7 +2,6 @@ package view
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -152,7 +151,7 @@ func (v *View) storeExecutor(in string) {
 	switch args[0] {
 	case Upload:
 		if len(args) == 1 {
-			v.uploadAction(true)
+			v.uploadAction(v.gogh.Data.Settings.Compress)
 			return
 		}
 		switch args[1] {
@@ -166,8 +165,6 @@ func (v *View) storeExecutor(in string) {
 		v.showStoreAction()
 	case Delete:
 		v.deleteAction()
-	case Exit:
-		os.Exit(0)
 	default:
 		NotFoundFunc()
 	}
@@ -179,7 +176,6 @@ func (v *View) storeCompleter(d prompt.Document) []prompt.Suggest {
 		{Text: Download, Description: "download remote file"},
 		{Text: Show, Description: "show all uploaded files"},
 		{Text: Delete, Description: "delete file from store"},
-		{Text: Exit, Description: ""},
 	}
 	// remove second postition complete
 	for _, c := range complete {
