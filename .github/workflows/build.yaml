@@ -21,11 +21,11 @@ jobs:
         with:
           go-version: "1.20"
 
-      - name: Build project for linux and build donut
+      - name: Build project
         run: |
           make build
 
-      - name: Make release tar
+      - name: Make release zip
         run: |
           zip -r9 ${{github.event.repository.name}}.zip \
           bin
