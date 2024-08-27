@@ -12,11 +12,12 @@ APP = gogh
 
 build: build-linux build-windows .crop ## Build all
 
-release: build-linux build-windows .crop zip ## Build release
+release: build-linux build-windows build-darwin .crop zip ## Build release
 
 zip:
 	cd $(PROJECT_BIN) && tar -cvzf $(PROJECT_BIN)/$(APP)_linux_amd64.tar.gz $(APP)
 	cd $(PROJECT_BIN) && tar -cvzf $(PROJECT_BIN)/$(APP)_windows_amd64.tar.gz $(APP).exe
+	cd $(PROJECT_BIN) && tar -cvzf $(PROJECT_BIN)/$(APP)_darwin_amd64.tar.gz $(APP)_darwin
 
 docker: ## Build with docker
 	docker compose up --build --force-recreate || docker-compose up --build --force-recreate
@@ -31,6 +32,11 @@ build-windows: ## Build for windows
 	CGO_ENABLED=0 GOOS=windows GOARCH=$(GOARCH) \
 	  $(GOBIN) build -ldflags="$(WINDOWS_LDFLAGS)" -trimpath -gcflags=$(GCFLAGS) -asmflags=$(ASMFLAGS) \
 	  -o $(PROJECT_BIN)/$(APP).exe cmd/gogh/main.go
+
+build-darwin: ## Build for darwin
+	CGO_ENABLED=0 GOOS=darwin GOARCH=$(GOARCH) \
+	  $(GOBIN) build -ldflags="$(LINUX_LDFLAGS)" -trimpath -gcflags=$(GCFLAGS) -asmflags=$(ASMFLAGS) \
+	  -o $(PROJECT_BIN)/$(APP)_darwin cmd/gogh/main.go
 	
 .crop:
 	strip $(PROJECT_BIN)/$(APP)
