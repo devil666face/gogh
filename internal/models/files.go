@@ -90,6 +90,10 @@ func (f *Filestore) Add(
 		})
 		f.Files[id] = file
 	}
+	f.Sort()
+}
+
+func (f *Filestore) Sort() {
 	sort.Slice(f.Files, func(i, j int) bool {
 		return f.Files[i].CreatedDate.Before(f.Files[j].CreatedDate)
 	})

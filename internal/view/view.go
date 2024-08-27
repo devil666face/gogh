@@ -37,6 +37,7 @@ var (
 const (
 	Store      = "store"
 	Settings   = "settings"
+	Share      = "share"
 	Show       = "show"
 	Delete     = "delete"
 	Upload     = "upload"
@@ -45,6 +46,8 @@ const (
 	Download   = "download"
 	Token      = "token"
 	Set        = "set"
+	Export     = "export"
+	Import     = "import"
 	Exit       = "exit"
 )
 
@@ -72,6 +75,12 @@ func (v *View) executor(in string) {
 			v.settingsCompleter,
 			fmt.Sprintf("%s%s >> ", Title, "⚙️ "+Settings),
 		).Run()
+	case Share:
+		NewPrompt(
+			v.shareExecutor,
+			v.shareCompleter,
+			fmt.Sprintf("%s%s >> ", Title, "🔁 "+Share),
+		).Run()
 	case Exit:
 		os.Exit(0)
 	default:
@@ -83,6 +92,7 @@ func (v *View) completer(d prompt.Document) []prompt.Suggest {
 	complete := []prompt.Suggest{
 		{Text: Store, Description: "file management"},
 		{Text: Settings, Description: "configure"},
+		{Text: Share, Description: "share file"},
 		{Text: Exit, Description: "close panel"},
 	}
 	// Remove second postition complete

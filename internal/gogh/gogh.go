@@ -40,14 +40,18 @@ func New() (*Gogh, error) {
 	}, nil
 }
 
-func (g *Gogh) SaveData() error {
-	return g.storage.Save(g.Data)
-}
-
 func (g *Gogh) SetToken(token string) error {
 	g.Data.Settings.SessionToken = token
 	g.github = gh.New(g.Data.Settings.SessionToken, "")
 	return g.SaveData()
+}
+
+func (g *Gogh) SaveData() error {
+	return g.storage.Save(g.Data)
+}
+
+func (g *Gogh) SaveFile(file *models.File) error {
+	return g.storage.SaveFile(file)
 }
 
 func (g *Gogh) LoadData() error {
@@ -57,6 +61,10 @@ func (g *Gogh) LoadData() error {
 	}
 	g.Data = _data
 	return nil
+}
+
+func (g *Gogh) LoadFile(filename string) (*models.File, error) {
+	return g.storage.LoadFile(filename)
 }
 
 func (g *Gogh) Upload(path string, compress bool) error {

@@ -34,23 +34,12 @@ func RunSelect(
 }
 
 func (v *View) uploadAction(compress bool) {
-	var (
-		file string
-		opts []huh.Option[string]
-	)
 	if v.gogh.Data.Settings.SessionToken == "" {
 		ErrorFunc(fmt.Errorf("you must set cookie token"))
 		return
 	}
-	files, err := fs.FilesInCurrentDir()
+	file, err := v.selectLocalFile("upload")
 	if err != nil {
-		ErrorFunc(err)
-		return
-	}
-	for _, f := range files {
-		opts = append(opts, huh.NewOption[string](f, f))
-	}
-	if err := RunSelect("upload", opts, &file); err != nil {
 		ErrorFunc(err)
 		return
 	}
@@ -109,6 +98,33 @@ func (v *View) selectRemoteFile(title string) (int, error) {
 		return -1, fmt.Errorf("failed to get delete id")
 	}
 	return id, nil
+}
+
+func (v *View) selectLocalFile(title string, suffix ...string) (string, error) {
+	var (
+		file   string
+		opts   []huh.Option[string]
+		sorted []string
+	)
+	files, err := fs.FilesInCurrentDir()
+	if err != nil {
+		return "", err
+	}
+	if len(suffix) == 1 {
+		for _, file := range files {
+			if strings.HasSuffix(file, suffix[0]) {
+				sorted = append(sorted, file)
+			}
+		}
+		files = sorted
+	}
+	for _, f := range files {
+		opts = append(opts, huh.NewOption[string](f, f))
+	}
+	if err := RunSelect(title, opts, &file); err != nil {
+		return "", err
+	}
+	return file, nil
 }
 
 func (v *View) deleteAction() {
