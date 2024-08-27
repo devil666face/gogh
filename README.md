@@ -22,6 +22,8 @@
 - Go to Store -> Cookies -> user_session
 - Copy the value, which looks like `bzzsDpsejMS8jiKH-eezHwUlQWERTYvPix0qGPxg8YyL-b-7`
 
+![](https://github.com/Devil666face/gogh/blob/main/.github/cookies.png)
+
 2. Set the token in Gogh
 
 - `settings`
