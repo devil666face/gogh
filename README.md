@@ -88,6 +88,18 @@
  1 test.txt                    Aug 27 16:04 4 B      +
 ```
 
+##### Delete file
+
+- `store`
+- `delete`
+
+```
+❯ gogh
+🪣 >> store
+🪣 >> 🗄️ store >> delete
+✅ deleted test.txt
+```
+
 #### Share
 
 > You can share Gogh files with all links and AES keys
