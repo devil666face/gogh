@@ -1,31 +1,32 @@
 # GOGH
 
-> Just share file via github api
-> All files crypted via AES256
+> Share files via GitHub API
+
+> All files are encrypted with AES256
 
 ## Installation
 
-1. Download release via [release page](https://github.com/Devil666face/gogh/releases/latest)
-2. Unzip `tar -xf gogh_linux_amd64.tar.gz`
-3. Add in your path `sudo cp gogh /usr/local/bin` or use via `./gogh`
+1. Download the release via the [release page](https://github.com/Devil666face/gogh/releases/latest).
+2. Unzip the file: `tar -xf gogh_linux_amd64.tar.gz`
+3. Add it to your path: `sudo cp gogh /usr/local/bin` or use it directly: `./gogh`
 
 ## Usage
 
 #### Settings
 
-1. Set your github session cookie token
+1. Set your GitHub session cookie token
 
 - Open your browser
-- Login on github and open github page
-- F12
-- Store -> Cookies -> user_session
-- Copy value like `bzzsDpsejMS8jiKH-eezHwUlQWERTYvPix0qGPxg8YyL-b-7`
+- Log in to GitHub and open the GitHub page
+- Press F12
+- Go to Store -> Cookies -> user_session
+- Copy the value, which looks like `bzzsDpsejMS8jiKH-eezHwUlQWERTYvPix0qGPxg8YyL-b-7`
 
-2. Set token on gogh
+2. Set the token in Gogh
 
 - `settings`
 - `set token`
-- enter your token `bzzsDpsejMS8jiKH-eezHwUlQWERTYvPix0qGPxg8YyL-b-7`
+- Enter your token: `bzzsDpsejMS8jiKH-eezHwUlQWERTYvPix0qGPxg8YyL-b-7`
 
 ```
 ❯ gogh
@@ -33,7 +34,7 @@
 🪣 >> ⚙️ settings >> set token
 ```
 
-3. Check what token sets
+3. Check the token
 
 - `show`
 
@@ -50,7 +51,7 @@
 
 - `store`
 - `upload`
-- choose file
+- Choose a file
 
 ```
 ❯ gogh
@@ -63,7 +64,7 @@
 
 - `store`
 - `download`
-- choose file
+- Choose a file
 
 ```
 ❯ gogh
@@ -87,15 +88,15 @@
 
 #### Share
 
-> You can share gogh files with all links and AES keys
+> You can share Gogh files with all links and AES keys
 
 ##### Export
 
 - `share`
 - `export`
-- choose uploaded remote file
-- exported file save on `file_name.gogh`
-- send `file_name.gogh` to you friend
+- Choose an uploaded remote file
+- The exported file will be saved as `file_name.gogh`
+- Send `file_name.gogh` to your friend
 
 ```
 ❯ gogh
@@ -108,8 +109,8 @@
 
 - `share`
 - `import`
-- choose local file in current dir with `.gogh`
-- now you can download file via store
+- Choose a local file in the current directory with the `.gogh` extension
+- You can now download the file via `store`
 
 ```
 ❯ gogh
@@ -120,8 +121,8 @@
 
 #### Configuration
 
-1. Gogh save database in `~/.config/gogh/gogh.enc`
-2. Use [config](https://github.com/Devil666face/gogh/blob/main/config.yaml) for override it `~/.config/gogh/config.yaml`. In this example base would be save in `~/files/second-brain.md/gogh.enc`
+1. Gogh saves the database in `~/.config/gogh/gogh.enc`.
+2. Use the [config file](https://github.com/Devil666face/gogh/blob/main/config.yaml) to override this to `~/.config/gogh/config.yaml`. For example, the base file could be saved as `~/files/second-brain.md/gogh.enc`.
 
 ```yaml
 database: ~/files/second-brain.md/gogh.enc
