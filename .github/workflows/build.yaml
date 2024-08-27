@@ -23,14 +23,7 @@ jobs:
 
       - name: Build project
         run: |
-          make build
-
-      - name: Make release zip
-        run: |
-          zip -r9 ${{github.event.repository.name}}.zip \
-          bin
-        env:
-          APP: ${{github.event.repository.name}}
+          make release
 
       - name: Set tag name
         run: echo "GITHUB_RELEASE_TAG=$(date +v%m.%d.%H)" >> $GITHUB_ENV
@@ -50,8 +43,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.event.repository.name }}.zip
-          asset_name: ${{ github.event.repository.name }}.zip
+          asset_path: ./bin/${{github.event.repository.name}}_linux_amd64.tar.gz
+          asset_name: ${{github.event.repository.name}}_linux_amd64.tar.gz
+          asset_content_type: application/zip
+
+      - uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/${{github.event.repository.name}}_windows_amd64.tar.gz
+          asset_name: ${{github.event.repository.name}}_windows_amd64.tar.gz
           asset_content_type: application/zip
 
       - uses: eregon/publish-release@v1

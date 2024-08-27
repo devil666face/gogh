@@ -12,6 +12,12 @@ APP = gogh
 
 build: build-linux build-windows .crop ## Build all
 
+release: build-linux build-windows .crop zip ## Build release
+
+zip:
+	cd $(PROJECT_BIN) && tar -cvzf $(PROJECT_BIN)/$(APP)_linux_amd64.tar.gz $(APP)
+	cd $(PROJECT_BIN) && tar -cvzf $(PROJECT_BIN)/$(APP)_windows_amd64.tar.gz $(APP).exe
+
 docker: ## Build with docker
 	docker compose up --build --force-recreate || docker-compose up --build --force-recreate
 
