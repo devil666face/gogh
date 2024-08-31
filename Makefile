@@ -37,6 +37,14 @@ build-darwin: ## Build for darwin
 	CGO_ENABLED=0 GOOS=darwin GOARCH=$(GOARCH) \
 	  $(GOBIN) build -ldflags="$(LINUX_LDFLAGS)" -trimpath -gcflags=$(GCFLAGS) -asmflags=$(ASMFLAGS) \
 	  -o $(PROJECT_BIN)/$(APP)_darwin cmd/gogh/main.go
+
+build-termux: ## Build for termux
+	# https://dl.google.com/android/repository/android-ndk-r27-linux.zip
+	CGO_ENABLED=1 GOOS=android GOARCH=arm64 \
+		CC=$(shell pwd)/android-ndk-r27/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang \
+		CXX=$(shell pwd)/android-ndk-r27/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang \
+		$(GOBIN) build -ldflags="-w -s" -trimpath -gcflags=$(GCFLAGS) -asmflags=$(ASMFLAGS) \
+		-o $(PROJECT_BIN)/$(APP)_termux cmd/gogh/main.go
 	
 .crop:
 	strip $(PROJECT_BIN)/$(APP)
