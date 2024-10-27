@@ -31,7 +31,7 @@ var NotFoundFunc func() = func() {
 }
 
 var (
-	Title = fmt.Sprintf("%s >> ", Emoji)
+	Title = fmt.Sprintf("\r%s >> ", Emoji)
 )
 
 const (
