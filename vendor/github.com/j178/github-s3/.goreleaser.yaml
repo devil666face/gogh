@@ -1,3 +1,4 @@
+version: 2
 before:
   hooks:
     - go mod tidy
@@ -34,7 +35,7 @@ archives:
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ incpatch .Version }}-next"
 changelog:
   sort: asc
   filters:
@@ -45,6 +46,7 @@ brews:
   - repository:
       owner: j178
       name: homebrew-tap
+    directory: Formula
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
@@ -59,7 +61,7 @@ scoops:
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
-    folder: bucket
+    directory: bucket
     homepage: https://github.com/j178/github-s3
     description: Use GitHub as a file server.
     license: MIT

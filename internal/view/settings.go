@@ -18,12 +18,20 @@ func (v *View) showSettingsAction() {
 	fmt.Fprintf(w, "%s\t%s", "Key", "Value")
 	fmt.Fprintf(w, "\n%s\t%s", "compress", boolFormat(v.gogh.Data.Settings.Compress))
 	fmt.Fprintf(w, "\n%s\t%s", "token", v.gogh.Data.Settings.SessionToken)
+	fmt.Fprintf(w, "\n%s\t%s", "device", v.gogh.Data.Settings.DeviceID)
 	w.Flush()
 	fmt.Println(
 		lipgloss.NewStyle().
 			Padding(0, 1).
 			Render(sb.String()),
 	)
+}
+
+var strValidator = func(in string) error {
+	if in == "" {
+		return fmt.Errorf("value is empty")
+	}
+	return nil
 }
 
 func (v *View) settingsExecutor(in string) {
@@ -43,16 +51,10 @@ func (v *View) settingsExecutor(in string) {
 		switch args[1] {
 		case Token:
 			var (
-				token        string
-				strValidator = func(in string) error {
-					if in == "" {
-						return fmt.Errorf("value is empty")
-					}
-					return nil
-				}
+				token string
 			)
 			if err := huh.NewInput().
-				Title("set cookie token").
+				Title("<user_session>").
 				Prompt(">> ").
 				Validate(strValidator).
 				Value(&token).
@@ -62,6 +64,23 @@ func (v *View) settingsExecutor(in string) {
 				return
 			}
 			if err := v.gogh.SetToken(token); err != nil {
+				ErrorFunc(err)
+			}
+		case Device:
+			var (
+				deviceID string
+			)
+			if err := huh.NewInput().
+				Title("<_device_id>").
+				Prompt(">> ").
+				Validate(strValidator).
+				Value(&deviceID).
+				Placeholder(v.gogh.Data.Settings.DeviceID).
+				Run(); err != nil {
+				ErrorFunc(err)
+				return
+			}
+			if err := v.gogh.SetDeviceID(deviceID); err != nil {
 				ErrorFunc(err)
 			}
 		case Compress:
@@ -100,7 +119,8 @@ func (v *View) settingsCompleter(d prompt.Document) []prompt.Suggest {
 	if HasPrefix(d, Set) {
 		complete = []prompt.Suggest{
 			{Text: Compress, Description: "set default compress or no"},
-			{Text: Token, Description: "set github cookies token"},
+			{Text: Token, Description: "set github <user_session>"},
+			{Text: Device, Description: "set github <_device_id>"},
 		}
 	}
 

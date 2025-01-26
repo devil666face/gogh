@@ -45,6 +45,7 @@ const (
 	Compress   = "compress"
 	Download   = "download"
 	Token      = "token"
+	Device     = "device"
 	Set        = "set"
 	Export     = "export"
 	Import     = "import"

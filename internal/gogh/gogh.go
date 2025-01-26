@@ -36,13 +36,30 @@ func New() (*Gogh, error) {
 		Data:    _data,
 		config:  _config,
 		storage: _storage,
-		github:  gh.New(_data.Settings.SessionToken, ""),
+		github: gh.New(
+			gh.Credential{
+				UserSession: _data.Settings.SessionToken,
+				DeviceID:    _data.Settings.DeviceID,
+			},
+			""),
 	}, nil
 }
 
 func (g *Gogh) SetToken(token string) error {
 	g.Data.Settings.SessionToken = token
-	g.github = gh.New(g.Data.Settings.SessionToken, "")
+	g.github = gh.New(gh.Credential{
+		UserSession: g.Data.Settings.SessionToken,
+		DeviceID:    g.Data.Settings.DeviceID,
+	}, "")
+	return g.SaveData()
+}
+
+func (g *Gogh) SetDeviceID(id string) error {
+	g.Data.Settings.DeviceID = id
+	g.github = gh.New(gh.Credential{
+		UserSession: g.Data.Settings.SessionToken,
+		DeviceID:    g.Data.Settings.DeviceID,
+	}, "")
 	return g.SaveData()
 }
 
